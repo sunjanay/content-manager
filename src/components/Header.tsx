@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { ViewToggle } from './ui/ViewToggle';
 import { FilterBar } from './ui/FilterBar';
 
@@ -9,6 +10,14 @@ interface HeaderProps {
 }
 
 export function Header({ onNewContent, onImport }: HeaderProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+    router.refresh();
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex flex-col gap-4">
@@ -26,6 +35,13 @@ export function Header({ onNewContent, onImport }: HeaderProps) {
               className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
             >
               + New Content
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-2 text-gray-500 hover:text-gray-700 transition-colors text-sm"
+              title="Sign out"
+            >
+              Sign out
             </button>
           </div>
         </div>
