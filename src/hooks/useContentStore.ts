@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { ContentItem, ContentStatus, Pillar, FilterState, ViewMode, Platform, DEFAULT_PLATFORMS } from '@/lib/types';
 import { DEFAULT_PILLARS, STORAGE_KEY } from '@/lib/constants';
 import { generateId, getCurrentTimestamp } from '@/lib/utils';
+import { SEED_DATA } from '@/lib/seedData';
 
 interface ContentStore {
   content: ContentItem[];
@@ -30,8 +31,8 @@ interface ContentStore {
 export const useContentStore = create<ContentStore>()(
   persist(
     (set) => ({
-      content: [],
-      pillars: DEFAULT_PILLARS,
+      content: SEED_DATA.state.content as ContentItem[],
+      pillars: SEED_DATA.state.pillars as Pillar[],
       view: 'calendar',
       filters: {
         pillar: null,
