@@ -19,6 +19,8 @@
     "@tiptap/react": "^3.12.1",
     "@tiptap/starter-kit": "^3.12.1",
     "@tiptap/suggestion": "^3.12.1",
+    "@vercel/blob": "^2.0.0",
+    "@vercel/kv": "^3.0.0",
     "@vercel/postgres": "^0.10.0",
     "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.16.1",

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useContentStore } from '@/hooks/useContentStore';
+import { useDataSync } from '@/hooks/useDataSync';
 import { ContentItem } from '@/lib/types';
 import { Header } from '@/components/Header';
 import { CalendarView } from '@/components/calendar/CalendarView';
@@ -11,6 +12,9 @@ import { ImportModal } from '@/components/modals/ImportModal';
 
 export default function Home() {
   const view = useContentStore((state) => state.view);
+
+  // Auto-sync data with remote database
+  useDataSync();
 
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
