@@ -26,10 +26,12 @@ function KanbanColumn({ status, label, items, onCardClick, onAddContent }: Kanba
   });
 
   const handleColumnClick = (e: React.MouseEvent) => {
-    // Only trigger if clicking on the column background, not on cards
-    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.kanban-column-header')) {
-      onAddContent();
+    // Don't trigger if clicking on a card (cards have data-card attribute)
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-card]')) {
+      return;
     }
+    onAddContent();
   };
 
   return (
@@ -41,7 +43,7 @@ function KanbanColumn({ status, label, items, onCardClick, onAddContent }: Kanba
         ${isOver ? 'bg-blue-100 ring-2 ring-blue-300' : 'bg-gray-100 hover:bg-gray-150'}
       `}
     >
-      <div className="flex items-center justify-between mb-2 kanban-column-header">
+      <div className="flex items-center justify-between mb-2">
         <h4 className="text-sm font-medium text-gray-700">{label}</h4>
         <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">
           {items.length}
@@ -49,12 +51,13 @@ function KanbanColumn({ status, label, items, onCardClick, onAddContent }: Kanba
       </div>
       <div className="space-y-2 overflow-y-auto" style={{ maxHeight: 'calc(100% - 28px)' }}>
         {items.map((item) => (
-          <CalendarCard
-            key={item.id}
-            item={item}
-            onClick={() => onCardClick(item)}
-            compact
-          />
+          <div key={item.id} data-card="true">
+            <CalendarCard
+              item={item}
+              onClick={() => onCardClick(item)}
+              compact
+            />
+          </div>
         ))}
         {items.length === 0 && (
           <div className="text-xs text-gray-400 text-center py-2">
