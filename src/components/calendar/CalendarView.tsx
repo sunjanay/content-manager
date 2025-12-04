@@ -30,7 +30,7 @@ import { KanbanSidebar } from './KanbanSidebar';
 
 interface CalendarViewProps {
   onCardClick: (item: ContentItem) => void;
-  onNewContent: () => void;
+  onNewContent: (status?: ContentStatus) => void;
 }
 
 export function CalendarView({ onCardClick, onNewContent }: CalendarViewProps) {

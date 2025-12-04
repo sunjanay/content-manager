@@ -9,9 +9,10 @@ interface ContentModalProps {
   item: ContentItem | null;
   isOpen: boolean;
   onClose: () => void;
+  defaultStatus?: ContentStatus | null;
 }
 
-export function ContentModal({ item, isOpen, onClose }: ContentModalProps) {
+export function ContentModal({ item, isOpen, onClose, defaultStatus }: ContentModalProps) {
   const pillars = useContentStore((state) => state.pillars);
   const content = useContentStore((state) => state.content);
   const addContent = useContentStore((state) => state.addContent);
@@ -89,7 +90,7 @@ export function ContentModal({ item, isOpen, onClose }: ContentModalProps) {
       setFormData({
         title: '',
         pillar: pillars[0]?.name || '',
-        status: 'idea',
+        status: defaultStatus || 'idea',
         notes: '',
         caption: '',
         postingDate: '',
@@ -97,7 +98,7 @@ export function ContentModal({ item, isOpen, onClose }: ContentModalProps) {
       });
     }
     setShowDeleteConfirm(false);
-  }, [item, pillars, isOpen]);
+  }, [item, pillars, isOpen, defaultStatus]);
 
   // Cleanup debounce on unmount
   useEffect(() => {

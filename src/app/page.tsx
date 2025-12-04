@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useContentStore } from '@/hooks/useContentStore';
 import { useDataSync } from '@/hooks/useDataSync';
-import { ContentItem } from '@/lib/types';
+import { ContentItem, ContentStatus } from '@/lib/types';
 import { Header } from '@/components/Header';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { TableView } from '@/components/table/TableView';
@@ -19,9 +19,11 @@ export default function Home() {
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+  const [defaultStatus, setDefaultStatus] = useState<ContentStatus | null>(null);
 
-  const handleNewContent = () => {
+  const handleNewContent = (status?: ContentStatus) => {
     setSelectedItem(null);
+    setDefaultStatus(status || null);
     setIsContentModalOpen(true);
   };
 
@@ -33,6 +35,7 @@ export default function Home() {
   const handleCloseContentModal = () => {
     setIsContentModalOpen(false);
     setSelectedItem(null);
+    setDefaultStatus(null);
   };
 
   return (
@@ -54,6 +57,7 @@ export default function Home() {
         item={selectedItem}
         isOpen={isContentModalOpen}
         onClose={handleCloseContentModal}
+        defaultStatus={defaultStatus}
       />
 
       <ImportModal

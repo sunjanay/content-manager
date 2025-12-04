@@ -9,7 +9,7 @@ import { CalendarCard } from './CalendarCard';
 interface KanbanSidebarProps {
   content: ContentItem[];
   onCardClick: (item: ContentItem) => void;
-  onNewContent: () => void;
+  onNewContent: (status?: ContentStatus) => void;
 }
 
 interface KanbanColumnProps {
@@ -17,22 +17,31 @@ interface KanbanColumnProps {
   label: string;
   items: ContentItem[];
   onCardClick: (item: ContentItem) => void;
+  onAddContent: () => void;
 }
 
-function KanbanColumn({ status, label, items, onCardClick }: KanbanColumnProps) {
+function KanbanColumn({ status, label, items, onCardClick, onAddContent }: KanbanColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: `kanban-${status}`,
   });
 
+  const handleColumnClick = (e: React.MouseEvent) => {
+    // Only trigger if clicking on the column background, not on cards
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.kanban-column-header')) {
+      onAddContent();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
+      onClick={handleColumnClick}
       className={`
-        flex-1 min-h-[120px] rounded-lg p-2 transition-colors
-        ${isOver ? 'bg-blue-100 ring-2 ring-blue-300' : 'bg-gray-100'}
+        flex-1 min-h-[120px] rounded-lg p-2 transition-colors cursor-pointer
+        ${isOver ? 'bg-blue-100 ring-2 ring-blue-300' : 'bg-gray-100 hover:bg-gray-150'}
       `}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2 kanban-column-header">
         <h4 className="text-sm font-medium text-gray-700">{label}</h4>
         <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">
           {items.length}
@@ -47,6 +56,11 @@ function KanbanColumn({ status, label, items, onCardClick }: KanbanColumnProps) 
             compact
           />
         ))}
+        {items.length === 0 && (
+          <div className="text-xs text-gray-400 text-center py-2">
+            Click to add
+          </div>
+        )}
       </div>
     </div>
   );
@@ -128,7 +142,7 @@ export function KanbanSidebar({ content, onCardClick, onNewContent }: KanbanSide
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-gray-800">Production Pipeline</h3>
         <button
-          onClick={onNewContent}
+          onClick={() => onNewContent()}
           className="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-lg font-bold"
           title="Add new content"
         >
@@ -143,6 +157,7 @@ export function KanbanSidebar({ content, onCardClick, onNewContent }: KanbanSide
             label={col.label}
             items={contentByStatus[col.id]}
             onCardClick={onCardClick}
+            onAddContent={() => onNewContent(col.id)}
           />
         ))}
       </div>
