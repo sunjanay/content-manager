@@ -10,15 +10,19 @@ interface ContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultStatus?: ContentStatus | null;
+  defaultDate?: string | null;
 }
 
-export function ContentModal({ item, isOpen, onClose, defaultStatus }: ContentModalProps) {
+export function ContentModal({ item, isOpen, onClose, defaultStatus, defaultDate }: ContentModalProps) {
   const pillars = useContentStore((state) => state.pillars);
   const content = useContentStore((state) => state.content);
   const addContent = useContentStore((state) => state.addContent);
   const updateContent = useContentStore((state) => state.updateContent);
   const deleteContent = useContentStore((state) => state.deleteContent);
   const togglePlatform = useContentStore((state) => state.togglePlatform);
+  const addPillar = useContentStore((state) => state.addPillar);
+  const updatePillar = useContentStore((state) => state.updatePillar);
+  const deletePillar = useContentStore((state) => state.deletePillar);
 
   // Get live platform data from store
   const currentItem = item ? content.find(c => c.id === item.id) : null;
@@ -35,7 +39,21 @@ export function ContentModal({ item, isOpen, onClose, defaultStatus }: ContentMo
   });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [editingPillar, setEditingPillar] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState('#bfe1f6');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const PRESET_COLORS = [
+    { bg: '#bfe1f6', text: '#0a53a8' },
+    { bg: '#ffc8aa', text: '#753800' },
+    { bg: '#d4edbc', text: '#11734b' },
+    { bg: '#ffe5a0', text: '#473821' },
+    { bg: '#ffcfc9', text: '#b10202' },
+    { bg: '#e8d5f9', text: '#5b21b6' },
+    { bg: '#d1d5db', text: '#374151' },
+  ];
 
   // Auto-save function for existing items
   const autoSave = useCallback((data: typeof formData) => {
@@ -90,15 +108,19 @@ export function ContentModal({ item, isOpen, onClose, defaultStatus }: ContentMo
       setFormData({
         title: '',
         pillar: pillars[0]?.name || '',
-        status: defaultStatus || 'idea',
+        status: defaultDate ? 'edited' : (defaultStatus || 'idea'),
         notes: '',
         caption: '',
-        postingDate: '',
+        postingDate: defaultDate || '',
         results: '',
       });
     }
     setShowDeleteConfirm(false);
-  }, [item, pillars, isOpen, defaultStatus]);
+    setShowAddCategory(false);
+    setEditingPillar(null);
+    setNewCategoryName('');
+    setNewCategoryColor('#bfe1f6');
+  }, [item, pillars, isOpen, defaultStatus, defaultDate]);
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -142,6 +164,57 @@ export function ContentModal({ item, isOpen, onClose, defaultStatus }: ContentMo
     if (item) {
       togglePlatform(item.id, platform);
     }
+  };
+
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    const colorPreset = PRESET_COLORS.find(c => c.bg === newCategoryColor) || PRESET_COLORS[0];
+    addPillar({
+      name: newCategoryName.trim(),
+      color: colorPreset.bg,
+      textColor: colorPreset.text,
+    });
+    setNewCategoryName('');
+    setNewCategoryColor('#bfe1f6');
+    setShowAddCategory(false);
+  };
+
+  const handleUpdateCategory = (id: string) => {
+    if (!newCategoryName.trim()) return;
+    const colorPreset = PRESET_COLORS.find(c => c.bg === newCategoryColor) || PRESET_COLORS[0];
+    const oldPillar = pillars.find(p => p.id === id);
+    updatePillar(id, {
+      name: newCategoryName.trim(),
+      color: colorPreset.bg,
+      textColor: colorPreset.text,
+    });
+    // Update content items that used the old pillar name
+    if (oldPillar && oldPillar.name !== newCategoryName.trim()) {
+      content.forEach(c => {
+        if (c.pillar === oldPillar.name) {
+          updateContent(c.id, { pillar: newCategoryName.trim() });
+        }
+      });
+    }
+    setNewCategoryName('');
+    setNewCategoryColor('#bfe1f6');
+    setEditingPillar(null);
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    const pillar = pillars.find(p => p.id === id);
+    if (pillar && formData.pillar === pillar.name) {
+      updateFormData({ pillar: pillars[0]?.name || '' });
+    }
+    deletePillar(id);
+    setEditingPillar(null);
+  };
+
+  const startEditingPillar = (pillar: { id: string; name: string; color: string }) => {
+    setEditingPillar(pillar.id);
+    setNewCategoryName(pillar.name);
+    setNewCategoryColor(pillar.color);
+    setShowAddCategory(false);
   };
 
   // Close when clicking backdrop
@@ -220,12 +293,13 @@ export function ContentModal({ item, isOpen, onClose, defaultStatus }: ContentMo
                 <label className="block text-xs font-medium text-gray-500 mb-1">
                   Category
                 </label>
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex gap-1.5 flex-wrap items-center">
                   {pillars.map((pillar) => (
                     <button
                       key={pillar.id}
                       type="button"
                       onClick={() => updateFormData({ pillar: pillar.name })}
+                      onDoubleClick={() => startEditingPillar(pillar)}
                       className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                         formData.pillar === pillar.name
                           ? 'ring-2 ring-offset-1'
@@ -236,11 +310,108 @@ export function ContentModal({ item, isOpen, onClose, defaultStatus }: ContentMo
                         color: pillar.textColor,
                         '--tw-ring-color': pillar.textColor,
                       } as React.CSSProperties}
+                      title="Double-click to edit"
                     >
                       {pillar.name}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddCategory(!showAddCategory);
+                      setEditingPillar(null);
+                      setNewCategoryName('');
+                      setNewCategoryColor('#bfe1f6');
+                    }}
+                    className="w-6 h-6 flex items-center justify-center rounded border border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+                    title="Add category"
+                  >
+                    +
+                  </button>
                 </div>
+
+                {/* Add/Edit Category Form */}
+                {(showAddCategory || editingPillar) && (
+                  <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        placeholder="Category name"
+                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        autoFocus
+                      />
+                      <div className="flex gap-1">
+                        {PRESET_COLORS.map((color) => (
+                          <button
+                            key={color.bg}
+                            type="button"
+                            onClick={() => setNewCategoryColor(color.bg)}
+                            className={`w-5 h-5 rounded-full border-2 transition-all ${
+                              newCategoryColor === color.bg
+                                ? 'border-gray-600 scale-110'
+                                : 'border-transparent hover:scale-105'
+                            }`}
+                            style={{ backgroundColor: color.bg }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      {editingPillar ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateCategory(editingPillar)}
+                            className="px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(editingPillar)}
+                            className="px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPillar(null);
+                              setNewCategoryName('');
+                              setNewCategoryColor('#bfe1f6');
+                            }}
+                            className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleAddCategory}
+                            className="px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddCategory(false);
+                              setNewCategoryName('');
+                              setNewCategoryColor('#bfe1f6');
+                            }}
+                            className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="w-36">
                 <label className="block text-xs font-medium text-gray-500 mb-1">

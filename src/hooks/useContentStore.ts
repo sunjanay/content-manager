@@ -26,6 +26,8 @@ interface ContentStore {
 
   // Pillar actions
   addPillar: (pillar: Omit<Pillar, 'id'>) => void;
+  updatePillar: (id: string, updates: Partial<Omit<Pillar, 'id'>>) => void;
+  deletePillar: (id: string) => void;
 }
 
 export const useContentStore = create<ContentStore>()(
@@ -123,6 +125,18 @@ export const useContentStore = create<ContentStore>()(
       addPillar: (pillar) =>
         set((state) => ({
           pillars: [...state.pillars, { ...pillar, id: generateId() }],
+        })),
+
+      updatePillar: (id, updates) =>
+        set((state) => ({
+          pillars: state.pillars.map((pillar) =>
+            pillar.id === id ? { ...pillar, ...updates } : pillar
+          ),
+        })),
+
+      deletePillar: (id) =>
+        set((state) => ({
+          pillars: state.pillars.filter((pillar) => pillar.id !== id),
         })),
     }),
     {

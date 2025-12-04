@@ -31,9 +31,10 @@ import { KanbanSidebar } from './KanbanSidebar';
 interface CalendarViewProps {
   onCardClick: (item: ContentItem) => void;
   onNewContent: (status?: ContentStatus) => void;
+  onDayClick?: (dateKey: string) => void;
 }
 
-export function CalendarView({ onCardClick, onNewContent }: CalendarViewProps) {
+export function CalendarView({ onCardClick, onNewContent, onDayClick }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [activeItem, setActiveItem] = useState<ContentItem | null>(null);
 
@@ -187,6 +188,7 @@ export function CalendarView({ onCardClick, onNewContent }: CalendarViewProps) {
                     isCurrentMonth={isCurrentMonth}
                     isToday={isToday(day)}
                     onCardClick={onCardClick}
+                    onDayClick={onDayClick}
                   />
                 );
               })}

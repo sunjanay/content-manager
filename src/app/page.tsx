@@ -20,10 +20,12 @@ export default function Home() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<ContentStatus | null>(null);
+  const [defaultDate, setDefaultDate] = useState<string | null>(null);
 
   const handleNewContent = (status?: ContentStatus) => {
     setSelectedItem(null);
     setDefaultStatus(status || null);
+    setDefaultDate(null);
     setIsContentModalOpen(true);
   };
 
@@ -32,10 +34,18 @@ export default function Home() {
     setIsContentModalOpen(true);
   };
 
+  const handleDayClick = (dateKey: string) => {
+    setSelectedItem(null);
+    setDefaultStatus(null);
+    setDefaultDate(dateKey);
+    setIsContentModalOpen(true);
+  };
+
   const handleCloseContentModal = () => {
     setIsContentModalOpen(false);
     setSelectedItem(null);
     setDefaultStatus(null);
+    setDefaultDate(null);
   };
 
   return (
@@ -47,7 +57,7 @@ export default function Home() {
 
       <main className="flex-1 p-6 overflow-hidden">
         {view === 'calendar' ? (
-          <CalendarView onCardClick={handleCardClick} onNewContent={handleNewContent} />
+          <CalendarView onCardClick={handleCardClick} onNewContent={handleNewContent} onDayClick={handleDayClick} />
         ) : (
           <TableView onRowClick={handleCardClick} />
         )}
@@ -58,6 +68,7 @@ export default function Home() {
         isOpen={isContentModalOpen}
         onClose={handleCloseContentModal}
         defaultStatus={defaultStatus}
+        defaultDate={defaultDate}
       />
 
       <ImportModal

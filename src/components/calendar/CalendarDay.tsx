@@ -13,6 +13,7 @@ interface CalendarDayProps {
   isToday: boolean;
   isUnscheduled?: boolean;
   onCardClick: (item: ContentItem) => void;
+  onDayClick?: (dateKey: string) => void;
 }
 
 export function CalendarDay({
@@ -23,6 +24,7 @@ export function CalendarDay({
   isToday,
   isUnscheduled = false,
   onCardClick,
+  onDayClick,
 }: CalendarDayProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: dateKey,
@@ -61,12 +63,20 @@ export function CalendarDay({
     );
   }
 
+  const handleDayClick = (e: React.MouseEvent) => {
+    // Only trigger if clicking directly on the day container or empty space
+    if (e.target === e.currentTarget && onDayClick) {
+      onDayClick(dateKey);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
+      onClick={handleDayClick}
       className={`
-        border rounded-lg p-1 flex flex-col min-h-[100px] transition-colors
-        ${isCurrentMonth ? 'bg-white' : 'bg-gray-50'}
+        border rounded-lg p-1 flex flex-col min-h-[100px] transition-colors cursor-pointer
+        ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'}
         ${isToday ? 'ring-2 ring-blue-500' : 'border-gray-200'}
         ${isOver ? 'bg-blue-50 ring-2 ring-blue-300' : ''}
       `}
@@ -88,7 +98,14 @@ export function CalendarDay({
       </div>
 
       {/* Content cards */}
-      <div className="flex-1 overflow-y-auto space-y-2 px-0.5">
+      <div
+        className="flex-1 overflow-y-auto space-y-2 px-0.5"
+        onClick={(e) => {
+          if (e.target === e.currentTarget && onDayClick) {
+            onDayClick(dateKey);
+          }
+        }}
+      >
         {items.slice(0, 2).map((item) => (
           <CalendarCard
             key={item.id}
